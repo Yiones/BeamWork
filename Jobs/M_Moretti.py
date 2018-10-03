@@ -9,8 +9,8 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 from scipy.stats import norm
 import time
-import h5py
-from srxraylib.plot.gol import plot_scatter
+#import h5py
+#from srxraylib.plot.gol import plot_scatter
 
 main = "__Moretti_1__"
 
@@ -42,21 +42,20 @@ def theta():
 
 if main == "__Moretti_1__":
 
-    beam1 = Beam(1e5)
-    beam1.set_gaussian_divergence(25. / (2 * np.sqrt(2 * np.log(2))) * 1e-6, 25. / (2 * np.sqrt(2 * np.log(2))) * 1e-6)
+    beam0 = Beam()
+    beam0.set_gaussian_divergence(25. / (2 * np.sqrt(2 * np.log(2))) * 1e-6, 25. / (2 * np.sqrt(2 * np.log(2))) * 1e-6)
+    beam0.set_rectangular_spot(xmax=1e-6,xmin=-1e-6,zmax=1e-6,zmin=-1e-6)
 
-    xmax = 0.01
-    xmin = -0.01
+    xmax = 0.0
+    xmin = -0.1
     ymax = 0.150
     ymin = -0.150
     zmax = 0.1
-    zmin = -0.1
+    zmin = -0.0
 
     bound = BoundaryRectangle(xmax=xmax, xmin=xmin, ymax=ymax, ymin=ymin, zmax=zmax, zmin=zmin)
-    dvx = [Beam(), Beam(), Beam(), Beam(), Beam()]
-    bem = [Beam(), Beam(), Beam(), Beam(), Beam()]
-    area = [Beam(), Beam(), Beam(), Beam(), Beam()]
-    b = [Beam(), Beam(), Beam(), Beam(), Beam()]
+    b = [0]*7
+    salpha = [0]*7
 
     bins_list = [1, 2, 3, 4, 5]
     y_list = [1, 2, 3, 4, 5]
@@ -69,18 +68,29 @@ if main == "__Moretti_1__":
 
         print("iteration %d" %i)
 
-        beam = beam1.duplicate()
-        alpha = round((-0.03 + 0.01 * i) * np.pi / 180 , 3)
+        beam = beam0.duplicate()
+        alpha =(-0.03 + 0.01 * i) * np.pi / 180
         print(alpha)
-
+        salpha[i] = str(round(-0.03 + 0.01 * i, 3))
 
 
 
         montel =  CompoundOpticalElement.initialize_as_montel_parabolic(p=0.351, q=1., theta_z=theta(), bound1=bound, bound2=bound, angle_of_mismatch=alpha, infinity_location='q')
-        beam1, beam2, beam = montel.trace_montel(beam,print_footprint=0)[2]
+        beam1, beam2, beam3 = montel.trace_montel(beam,print_footprint=0,mode=1)
 
-        beam = b[i]
+        b[i] = beam3[2]
 
 
+    plt.figure()
+    plt.hist(b[0].vx * 1e6, bins=900, normed=1, histtype='step', color='b')
+    plt.hist(b[1].vx * 1e6, bins=900, normed=1, histtype='step', color='orange')
+    plt.hist(b[2].vx * 1e6, bins=900, normed=1, histtype='step', color='g')
+    plt.hist(b[3].vx * 1e6, bins=900, normed=1, histtype='step', color='r')
+    plt.hist(b[4].vx * 1e6, bins=900, normed=1, histtype='step', color='darkviolet')
+    plt.hist(b[5].vx * 1e6, bins=900, normed=1, histtype='step', color='saddlebrown')
+    plt.hist(b[6].vx * 1e6, bins=900, normed=1, histtype='step', color='lightpink')
+    plt.legend(salpha)
+    plt.xlabel("x'[urad]")
+    plt.ylabel("frequency [a.u.]")
 
-    b[0].plot_good_xpzp(0)
+    plt.show()
